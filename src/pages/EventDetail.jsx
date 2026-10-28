@@ -1,14 +1,15 @@
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
-import { mockEvents } from '../data/mockData'
 import { formatDate, formatTime, getDayName, isPastEvent } from '../utils/dateUtils'
 
 function EventDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { isInscribed, inscribe, cancelInscription } = useApp()
+  const { isInscribed, inscribe, cancelInscription, events, eventsLoading, apiError } = useApp()
+  const event = events.find((e) => e.id === Number(id))
 
-  const event = mockEvents.find((e) => e.id === Number(id))
+  if (eventsLoading) return <div className="page"><p>Cargando evento…</p></div>
+  if (apiError && !event) return <div className="page"><div className="empty-state"><h3>No se pudo cargar el evento</h3><p>{apiError}</p></div></div>
 
   // Evento no encontrado
   if (!event) {
@@ -26,7 +27,7 @@ function EventDetail() {
 
   const past        = isPastEvent(event.date)
   const inscribed   = isInscribed(event.id)
-  const totalEnrolled = event.enrolled + (inscribed ? 1 : 0)
+  const totalEnrolled = event.enrolled
   const isFull      = totalEnrolled >= event.capacity
   const spotsLeft   = event.capacity - totalEnrolled
   const fillPercent = Math.min((totalEnrolled / event.capacity) * 100, 100)
@@ -43,6 +44,7 @@ function EventDetail() {
       <button onClick={() => navigate(-1)} className="back-btn">
         ← Volver
       </button>
+      {apiError && <p role="alert" className="page-subtitle">{apiError}</p>}
 
       <div className="detail-layout">
 

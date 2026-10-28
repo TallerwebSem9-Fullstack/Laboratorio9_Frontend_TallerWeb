@@ -1,8 +1,8 @@
 # EventosFISI — Eventos Académicos
 
-Aplicación web (SPA) para que los estudiantes exploren los eventos académicos del mes, consulten su detalle y gestionen sus inscripciones.
+Aplicación web (SPA) para que los estudiantes exploren los eventos académicos del mes, consulten su detalle y gestionen sus inscripciones. Se conecta al backend Node.js/Express del directorio `../Laboratorio9_Backend_TallerWeb`.
 
-Es un proyecto **solo frontend**: los eventos se cargan desde datos de prueba locales y la información del estudiante se guarda en el navegador (`localStorage`). No requiere backend ni base de datos.
+El frontend consume las APIs de eventos e inscripciones. El perfil del estudiante se guarda en `localStorage`; eventos e inscripciones se mantienen en memoria en el backend y se reinician al reiniciarlo. No se usa base de datos.
 
 ## Tecnologías
 
@@ -56,7 +56,9 @@ src/
 ├── App.jsx               # Proveedor de contexto + definición de rutas
 ├── index.css             # Estilos globales
 ├── context/
-│   └── AppContext.jsx    # Estado global: estudiante, inscripciones y modal
+│   └── AppContext.jsx    # Estado global, datos API, estudiante y modal
+├── services/
+│   └── api.js            # Cliente HTTP del backend
 ├── hooks/
 │   └── useEventFilter.js # Lógica de filtrado de eventos
 ├── pages/                # Vistas asociadas a una ruta
@@ -70,7 +72,7 @@ src/
 │   ├── FilterBar.jsx
 │   └── StudentModal.jsx
 ├── data/
-│   └── mockData.js       # Eventos y categorías de prueba
+│   └── mockData.js       # Categorías
 └── utils/
     └── dateUtils.js      # Formato de fechas/horas (locale es-PE)
 ```
@@ -91,9 +93,10 @@ flowchart TD
     EventList --> EventCard
     MyEvents --> EventCard
     EventList -. usa .-> useEventFilter
-    useEventFilter -. lee .-> mockData
-    EventDetail -. lee .-> mockData
-    MyEvents -. lee .-> mockData
+    AppProvider -. consulta .-> Backend[API Node/Express]
+    useEventFilter -. filtra .-> AppProvider
+    EventDetail -. lee .-> AppProvider
+    MyEvents -. lee .-> AppProvider
 ```
 
 ### Decisiones principales
@@ -103,16 +106,25 @@ flowchart TD
 - **Lógica separada de la vista.** El filtrado vive en el hook `useEventFilter` (memoizado con `useMemo`), y `FilterBar` solo recibe el estado y los *setters* por props.
 - **Layout con rutas anidadas.** `Layout` comparte la barra de navegación entre todas las páginas mediante `<Outlet />`. Cualquier ruta desconocida redirige a `/`.
 - **Modal global.** `StudentModal` se renderiza una sola vez fuera de las rutas y se abre desde cualquier parte con `openModal(eventId?)`. Si recibe un `eventId`, la inscripción a ese evento queda pendiente hasta que el estudiante confirme sus datos.
-- **Datos simulados.** `mockData.js` reemplaza a una API. Para conectar un backend real bastaría con sustituir las lecturas de `mockEvents` por llamadas HTTP.
+- **API REST.** El cliente HTTP está aislado en `src/services/api.js`. Vite redirige `/api` al backend en `http://localhost:3000` durante el desarrollo.
 
 ## Cómo ejecutar el proyecto
 
-Requisitos: **Node.js 20.19+ o 22.12+** y npm.
+Requisitos: **Node.js 20.19+ o 22.12+** y npm. En dos terminales, iniciar primero el backend y luego el frontend:
+
+```bash
+npm --prefix ../Laboratorio9_Backend_TallerWeb install
+npm --prefix ../Laboratorio9_Backend_TallerWeb run dev
+```
+
+En la terminal del frontend:
 
 ```bash
 npm install      # instalar dependencias (solo la primera vez)
 npm run dev      # servidor de desarrollo en http://localhost:5173
 ```
+
+En la página de eventos, el botón **Probar concurrencia** lanza una petición de 5 segundos y consulta `/api/health` mientras aquella espera. El servidor devuelve la salud rápidamente porque la demora usa un timer asíncrono que no bloquea el event loop. También se puede revisar el README del backend para ejecutar la prueba desde terminal.
 
 Otros scripts:
 
