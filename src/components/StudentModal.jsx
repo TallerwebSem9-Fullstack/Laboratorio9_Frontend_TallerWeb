@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 
 function StudentModal() {
-  const { student, modalOpen, pendingEventId, closeModal, confirmRegistration } = useApp()
+  const { student, modalOpen, pendingEventId, closeModal, confirmRegistration, apiError } = useApp()
 
   const isEditing = !!student && pendingEventId === null
 
@@ -59,7 +59,7 @@ function StudentModal() {
       name:  form.name.trim(),
       email: form.email.trim().toLowerCase(),
       phone: form.phone.trim(),
-    })
+    }).catch((error) => setErrors((prev) => ({ ...prev, submit: error.message })))
   }
 
   const handleOverlayClick = (e) => {
@@ -101,6 +101,8 @@ function StudentModal() {
 
         {/* Formulario */}
         <form onSubmit={handleSubmit} className="modal__body" noValidate>
+          {apiError && <p className="field-error" role="alert">{apiError}</p>}
+          {errors.submit && <p className="field-error" role="alert">{errors.submit}</p>}
 
           <div className="form-group">
             <label htmlFor="student-name" className="form-label">

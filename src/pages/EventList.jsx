@@ -1,8 +1,11 @@
 import { useEventFilter } from '../hooks/useEventFilter'
 import EventCard from '../components/EventCard'
 import FilterBar from '../components/FilterBar'
+import { useApp } from '../context/AppContext'
+import ConcurrencyDemo from '../components/ConcurrencyDemo'
 
 function EventList() {
+  const { eventsLoading, apiError } = useApp()
   const {
     filters, setFilter, resetFilters,
     filteredEvents, activeCount, CATEGORIES,
@@ -40,6 +43,10 @@ function EventList() {
         </div>
       </div>
 
+      {apiError && <p role="alert" className="page-subtitle">{apiError}</p>}
+      {eventsLoading && <p>Cargando eventos…</p>}
+      {!eventsLoading && !apiError && <ConcurrencyDemo />}
+
       {/* Barra de filtros */}
       <FilterBar
         filters={filters}
@@ -50,7 +57,7 @@ function EventList() {
       />
 
       {/* Grilla de eventos */}
-      {filteredEvents.length > 0 ? (
+      {!eventsLoading && filteredEvents.length > 0 ? (
         <div className="events-grid">
           {filteredEvents.map((event) => (
             <EventCard key={event.id} event={event} />

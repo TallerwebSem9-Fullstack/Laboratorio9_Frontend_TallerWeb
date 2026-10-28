@@ -1,16 +1,15 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
-import { mockEvents } from '../data/mockData'
 import EventCard from '../components/EventCard'
 import { isPastEvent } from '../utils/dateUtils'
 
 function MyEvents() {
-  const { student, openModal, inscriptions } = useApp()
+  const { student, openModal, inscriptions, events, eventsLoading, apiError } = useApp()
   const [activeTab, setActiveTab] = useState('upcoming') // 'upcoming' | 'past'
 
   // Obtiene solo los eventos en que el alumno está inscrito
-  const myEvents = mockEvents.filter((e) => inscriptions.includes(e.id))
+  const myEvents = events.filter((e) => inscriptions.includes(e.id))
 
   const upcoming = myEvents.filter((e) => !isPastEvent(e.date))
   const past     = myEvents.filter((e) => isPastEvent(e.date))
@@ -40,6 +39,9 @@ function MyEvents() {
           </div>
         </div>
       </div>
+
+      {apiError && <p role="alert" className="page-subtitle">{apiError}</p>}
+      {eventsLoading && <p>Cargando eventos…</p>}
 
       {/* Tabs */}
       <div className="tabs" role="tablist" aria-label="Mis eventos">

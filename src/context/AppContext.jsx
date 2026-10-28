@@ -1,13 +1,9 @@
-import { createContext, useContext, useState } from 'react'
-
-// ── Contexto global de la aplicación ─────────────────────────────────────────
-// Gestiona: perfil del estudiante + inscripciones a eventos.
-// Ambos persisten en localStorage.
+import { createContext, useContext, useEffect, useState } from 'react'
+import { api } from '../services/api'
 
 const AppContext = createContext(null)
 
 export function AppProvider({ children }) {
-  // Datos del estudiante identificado: { name, email, phone } | null
   const [student, setStudent] = useState(() => {
     try {
       const saved = localStorage.getItem('edu_student')
@@ -16,35 +12,60 @@ export function AppProvider({ children }) {
       return null
     }
   })
-
-  // Array de IDs de eventos en los que el alumno está inscrito
-  const [inscriptions, setInscriptions] = useState(() => {
-    try {
-      const saved = localStorage.getItem('edu_inscriptions')
-      return saved ? JSON.parse(saved) : []
-    } catch {
-      return []
-    }
-  })
-
-  // Estado del modal de identificación
+  const [inscriptions, setInscriptions] = useState([])
+  const [events, setEvents] = useState([])
+  const [eventsLoading, setEventsLoading] = useState(true)
+  const [apiError, setApiError] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [pendingEventId, setPendingEventId] = useState(null)
 
-  // ── Perfil del estudiante ───────────────────────────────────────────────────
+  useEffect(() => {
+    api.getEvents()
+      .then(setEvents)
+      .catch((error) => setApiError(`No se pudieron cargar los eventos: ${error.message}`))
+      .finally(() => setEventsLoading(false))
+  }, [])
+
+  useEffect(() => {
+    if (!student?.email) {
+      setInscriptions([])
+      return
+    }
+    api.getInscriptions(student.email)
+      .then(({ inscriptions: ids }) => setInscriptions(ids))
+      .catch((error) => setApiError(`No se pudieron cargar tus inscripciones: ${error.message}`))
+  }, [student?.email])
+
+  const refreshEvents = async () => {
+    try {
+      const latestEvents = await api.getEvents()
+      setEvents(latestEvents)
+    } catch (error) {
+      setApiError(`No se pudieron actualizar los eventos: ${error.message}`)
+    }
+  }
+
   const saveStudent = (data) => {
     setStudent(data)
     localStorage.setItem('edu_student', JSON.stringify(data))
   }
 
-  const clearStudent = () => {
+  const clearStudent = async () => {
+    if (student?.email) {
+      try {
+        await api.clearInscriptions(student.email)
+        await refreshEvents()
+      } catch (error) {
+        setApiError(error.message)
+        return
+      }
+    }
     setStudent(null)
     setInscriptions([])
     localStorage.removeItem('edu_student')
     localStorage.removeItem('edu_inscriptions')
   }
 
-  // ── Modal ───────────────────────────────────────────────────────────────────
   const openModal = (eventId = null) => {
     setPendingEventId(eventId)
     setModalOpen(true)
@@ -55,59 +76,65 @@ export function AppProvider({ children }) {
     setPendingEventId(null)
   }
 
-  // Llamado al enviar el formulario del modal: guarda perfil e inscribe si había evento pendiente
-  const confirmRegistration = (data) => {
+  const confirmRegistration = async (data) => {
     saveStudent(data)
     if (pendingEventId !== null) {
-      setInscriptions((prev) => {
-        if (prev.includes(pendingEventId)) return prev
-        const updated = [...prev, pendingEventId]
-        localStorage.setItem('edu_inscriptions', JSON.stringify(updated))
-        return updated
-      })
+      try {
+        const result = await api.enroll(pendingEventId, data.email)
+        setInscriptions(result.inscriptions)
+        setApiError('')
+        closeModal()
+        await refreshEvents()
+      } catch (error) {
+        setApiError(error.message)
+        throw error
+      }
+    } else {
+      closeModal()
     }
-    closeModal()
   }
 
-  // ── Inscripciones ───────────────────────────────────────────────────────────
-  const inscribe = (eventId) => {
-    // Si el estudiante no está identificado, abre el modal primero
+  const inscribe = async (eventId) => {
     if (!student) {
       openModal(eventId)
       return
     }
-    setInscriptions((prev) => {
-      if (prev.includes(eventId)) return prev
-      const updated = [...prev, eventId]
-      localStorage.setItem('edu_inscriptions', JSON.stringify(updated))
-      return updated
-    })
+    try {
+      const result = await api.enroll(eventId, student.email)
+      setInscriptions(result.inscriptions)
+      setApiError('')
+      await refreshEvents()
+    } catch (error) {
+      setApiError(error.message)
+    }
   }
 
-  const cancelInscription = (eventId) => {
-    setInscriptions((prev) => {
-      const updated = prev.filter((id) => id !== eventId)
-      localStorage.setItem('edu_inscriptions', JSON.stringify(updated))
-      return updated
-    })
+  const cancelInscription = async (eventId) => {
+    if (!student) return
+    try {
+      const result = await api.cancelEnrollment(eventId, student.email)
+      setInscriptions(result.inscriptions)
+      setApiError('')
+      await refreshEvents()
+    } catch (error) {
+      setApiError(error.message)
+    }
   }
 
   const isInscribed = (eventId) => inscriptions.includes(eventId)
 
   return (
-    <AppContext.Provider
-      value={{
-        student, saveStudent, clearStudent,
-        inscriptions, inscribe, cancelInscription, isInscribed,
-        modalOpen, openModal, closeModal, confirmRegistration,
-      }}
-    >
+    <AppContext.Provider value={{
+      student, saveStudent, clearStudent,
+      inscriptions, inscribe, cancelInscription, isInscribed,
+      events, eventsLoading, apiError,
+      modalOpen, openModal, closeModal, confirmRegistration, pendingEventId,
+    }}>
       {children}
     </AppContext.Provider>
   )
 }
 
-// Hook personalizado — evita importar useContext + AppContext en cada componente
 export function useApp() {
   const ctx = useContext(AppContext)
   if (!ctx) throw new Error('useApp debe usarse dentro de <AppProvider>')

@@ -8,7 +8,7 @@ function EventCard({ event, showCancelBtn = false }) {
 
   const past        = isPastEvent(event.date)
   const inscribed   = isInscribed(event.id)
-  const totalEnrolled = event.enrolled + (inscribed ? 1 : 0)
+  const totalEnrolled = event.enrolled
   const isFull      = totalEnrolled >= event.capacity
   const spotsLeft   = event.capacity - totalEnrolled
 
