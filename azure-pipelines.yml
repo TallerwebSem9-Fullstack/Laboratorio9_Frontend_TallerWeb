@@ -5,7 +5,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-# 1. Instalar Node (Corrigiendo la advertencia naranja de la versión antigua)
+# 1. Instalar Node
 - task: UseNode@1
   inputs:
     version: '20.x'
@@ -17,7 +17,7 @@ steps:
     npm run build
   displayName: 'npm install and build'
 
-# 3. Comprimir la carpeta compilada para enviarla más rápido
+# 3. Comprimir la carpeta compilada
 - task: ArchiveFiles@2
   inputs:
     rootFolderOrFile: '$(System.DefaultWorkingDirectory)/dist' 
@@ -27,11 +27,12 @@ steps:
     replaceExistingArchive: true
   displayName: 'Archive build files'
 
-# 4. Desplegar al App Service usando tu llave secreta
+# 4. Desplegar al App Service usando tu Conexión de Servicio
 - task: AzureWebApp@1
   inputs:
+    azureSubscription: 'Conexion-Frontend'
     appType: 'webAppLinux'
-    publishProfile: $(publishProfile)
+    appName: 'frontend-taller-web'
     package: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
     startUpCommand: 'pm2 serve /home/site/wwwroot --no-daemon --spa'
   displayName: 'Deploy to Azure App Service'
