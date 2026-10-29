@@ -14,7 +14,7 @@ steps:
 # 2. Instalar dependencias y compilar el proyecto
 - script: |
     npm install
-    npm run build
+    VITE_API_URL=https://backend-taller-web-hqeth2hcdecxemfg.brazilsouth-01.azurewebsites.net/api npm run build
   displayName: 'npm install and build'
 
 # 3. Comprimir la carpeta compilada
