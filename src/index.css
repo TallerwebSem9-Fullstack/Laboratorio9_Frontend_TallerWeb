@@ -681,7 +681,25 @@ img { display: block; max-width: 100%; }
   align-items: center;
   gap: var(--space-2);
   justify-content: flex-end;
+  flex-wrap: wrap;
 }
+
+.reviews-section {
+  margin-top: var(--space-8);
+  padding: var(--space-6);
+  background: #fff;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-xl);
+}
+
+.reviews-summary { color: var(--color-gray-600); margin: calc(var(--space-3) * -1) 0 var(--space-5); }
+.review-form { display: flex; flex-direction: column; gap: var(--space-4); max-width: 640px; }
+.review-textarea { min-height: 100px; resize: vertical; }
+.review-list { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-6); }
+.review-item { padding: var(--space-4); background: var(--color-gray-50); border-radius: var(--radius-lg); }
+.review-item__heading { display: flex; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-2); }
+.review-item__heading span { color: var(--color-warning); white-space: nowrap; }
+.review-item p { color: var(--color-gray-600); font-size: var(--font-size-sm); white-space: pre-wrap; }
 
 /* ============================================================
    TABS

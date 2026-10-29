@@ -1,6 +1,7 @@
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import { formatDate, formatTime, getDayName, isPastEvent } from '../utils/dateUtils'
+import ReviewsSection from '../components/ReviewsSection'
 
 function EventDetail() {
   const { id } = useParams()
@@ -94,6 +95,8 @@ function EventDetail() {
               </ol>
             </section>
           )}
+
+          <ReviewsSection event={event} />
 
         </article>
 

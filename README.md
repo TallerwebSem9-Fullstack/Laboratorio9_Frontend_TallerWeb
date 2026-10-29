@@ -2,7 +2,7 @@
 
 Aplicación web (SPA) para que los estudiantes exploren los eventos académicos del mes, consulten su detalle y gestionen sus inscripciones. Se conecta al backend Node.js/Express del directorio `../Laboratorio9_Backend_TallerWeb`.
 
-El frontend consume las APIs de eventos e inscripciones. El perfil del estudiante se guarda en `localStorage`; eventos e inscripciones se mantienen en memoria en el backend y se reinician al reiniciarlo. No se usa base de datos.
+El frontend consume las APIs de eventos, inscripciones, favoritos y reseñas. El perfil del estudiante se conserva en `localStorage`; las inscripciones, favoritos y reseñas se persisten en PostgreSQL a través del backend.
 
 ## Tecnologías
 
@@ -36,6 +36,13 @@ El frontend consume las APIs de eventos e inscripciones. El perfil del estudiant
 - Lista de los eventos en los que el estudiante está inscrito, separada en pestañas **Próximos** y **Asistidos**.
 - Cancelación de inscripciones de eventos que aún no se realizan.
 - Contador de inscripciones en la barra de navegación.
+
+### Favoritos (`/favoritos`)
+- Guarda y consulta los eventos favoritos del estudiante; se sincronizan con el backend y PostgreSQL.
+
+### Calificaciones y comentarios
+- En el detalle de un evento realizado se puede publicar o actualizar una calificación de 1 a 5 y un comentario.
+- Se muestran las opiniones y el promedio de calificaciones.
 
 ### Identificación del estudiante
 - Modal con nombre, correo institucional y teléfono.
@@ -107,13 +114,16 @@ flowchart TD
 - **Layout con rutas anidadas.** `Layout` comparte la barra de navegación entre todas las páginas mediante `<Outlet />`. Cualquier ruta desconocida redirige a `/`.
 - **Modal global.** `StudentModal` se renderiza una sola vez fuera de las rutas y se abre desde cualquier parte con `openModal(eventId?)`. Si recibe un `eventId`, la inscripción a ese evento queda pendiente hasta que el estudiante confirme sus datos.
 - **API REST.** El cliente HTTP está aislado en `src/services/api.js`. Vite redirige `/api` al backend en `http://localhost:3000` durante el desarrollo.
+- **Configuración de API.** `VITE_API_URL` define la URL base, por ejemplo `https://<backend>/api` en producción. `.env.example` muestra la configuración local.
 
 ## Cómo ejecutar el proyecto
 
-Requisitos: **Node.js 20.19+ o 22.12+** y npm. En dos terminales, iniciar primero el backend y luego el frontend:
+Requisitos: **Node.js 20.19+ o 22.12+** y npm, más una instancia PostgreSQL accesible. No se requiere Docker local. En dos terminales, prepara e inicia el backend y luego el frontend:
 
 ```bash
 npm --prefix ../Laboratorio9_Backend_TallerWeb install
+npm --prefix ../Laboratorio9_Backend_TallerWeb run db:generate
+npm --prefix ../Laboratorio9_Backend_TallerWeb run db:migrate:dev
 npm --prefix ../Laboratorio9_Backend_TallerWeb run dev
 ```
 
@@ -123,6 +133,8 @@ En la terminal del frontend:
 npm install      # instalar dependencias (solo la primera vez)
 npm run dev      # servidor de desarrollo en http://localhost:5173
 ```
+
+Para apuntar a un backend desplegado, crea `.env` desde `.env.example` y configura `VITE_API_URL` antes de ejecutar `npm run build`.
 
 En la página de eventos, el botón **Probar concurrencia** lanza una petición de 5 segundos y consulta `/api/health` mientras aquella espera. El servidor devuelve la salud rápidamente porque la demora usa un timer asíncrono que no bloquea el event loop. También se puede revisar el README del backend para ejecutar la prueba desde terminal.
 

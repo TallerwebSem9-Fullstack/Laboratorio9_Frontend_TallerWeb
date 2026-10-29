@@ -2,7 +2,7 @@ import { Link, NavLink } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 
 function Navbar() {
-  const { student, clearStudent, inscriptions, openModal } = useApp()
+  const { student, clearStudent, inscriptions, favorites, openModal } = useApp()
 
   return (
     <header className="navbar">
@@ -24,6 +24,13 @@ function Navbar() {
             }
           >
             Eventos del Mes
+          </NavLink>
+          <NavLink
+            to="/favoritos"
+            className={({ isActive }) => `navbar__link ${isActive ? 'navbar__link--active' : ''}`}
+          >
+            Favoritos
+            {favorites.length > 0 && <span className="navbar__badge">{favorites.length}</span>}
           </NavLink>
           <NavLink
             to="/mis-eventos"
