@@ -4,10 +4,11 @@ import { formatDate, formatTime, getDayName, isPastEvent } from '../utils/dateUt
 
 // Tarjeta de evento para la grilla principal y lista de Mis Eventos
 function EventCard({ event, showCancelBtn = false }) {
-  const { isInscribed, inscribe, cancelInscription } = useApp()
+  const { isInscribed, inscribe, cancelInscription, isFavorite, toggleFavorite } = useApp()
 
   const past        = isPastEvent(event.date)
   const inscribed   = isInscribed(event.id)
+  const favorite    = isFavorite(event.id)
   const totalEnrolled = event.enrolled
   const isFull      = totalEnrolled >= event.capacity
   const spotsLeft   = event.capacity - totalEnrolled
@@ -20,6 +21,11 @@ function EventCard({ event, showCancelBtn = false }) {
   const handleCancel = (e) => {
     e.preventDefault()
     cancelInscription(event.id)
+  }
+
+  const handleFavorite = (e) => {
+    e.preventDefault()
+    toggleFavorite(event.id)
   }
 
   return (
@@ -85,6 +91,9 @@ function EventCard({ event, showCancelBtn = false }) {
         </div>
 
         <div className="event-card__actions">
+          <button onClick={handleFavorite} className="btn btn--ghost btn--sm" aria-pressed={favorite}>
+            {favorite ? '♥ Favorito' : '♡ Favorito'}
+          </button>
           <Link to={`/eventos/${event.id}`} className="btn btn--outline btn--sm">
             Ver detalle
           </Link>

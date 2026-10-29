@@ -13,6 +13,7 @@ export function AppProvider({ children }) {
     }
   })
   const [inscriptions, setInscriptions] = useState([])
+  const [favorites, setFavorites] = useState([])
   const [events, setEvents] = useState([])
   const [eventsLoading, setEventsLoading] = useState(true)
   const [apiError, setApiError] = useState('')
@@ -29,11 +30,15 @@ export function AppProvider({ children }) {
   useEffect(() => {
     if (!student?.email) {
       setInscriptions([])
+      setFavorites([])
       return
     }
     api.getInscriptions(student.email)
       .then(({ inscriptions: ids }) => setInscriptions(ids))
       .catch((error) => setApiError(`No se pudieron cargar tus inscripciones: ${error.message}`))
+    api.getFavorites(student.email)
+      .then(({ favorites: ids }) => setFavorites(ids))
+      .catch((error) => setApiError(`No se pudieron cargar tus favoritos: ${error.message}`))
   }, [student?.email])
 
   const refreshEvents = async () => {
@@ -62,6 +67,7 @@ export function AppProvider({ children }) {
     }
     setStudent(null)
     setInscriptions([])
+    setFavorites([])
     localStorage.removeItem('edu_student')
     localStorage.removeItem('edu_inscriptions')
   }
@@ -80,7 +86,7 @@ export function AppProvider({ children }) {
     saveStudent(data)
     if (pendingEventId !== null) {
       try {
-        const result = await api.enroll(pendingEventId, data.email)
+        const result = await api.enroll(pendingEventId, data)
         setInscriptions(result.inscriptions)
         setApiError('')
         closeModal()
@@ -100,7 +106,7 @@ export function AppProvider({ children }) {
       return
     }
     try {
-      const result = await api.enroll(eventId, student.email)
+      const result = await api.enroll(eventId, student)
       setInscriptions(result.inscriptions)
       setApiError('')
       await refreshEvents()
@@ -123,10 +129,29 @@ export function AppProvider({ children }) {
 
   const isInscribed = (eventId) => inscriptions.includes(eventId)
 
+  const toggleFavorite = async (eventId) => {
+    if (!student) {
+      openModal(null)
+      return
+    }
+    try {
+      const result = favorites.includes(eventId)
+        ? await api.removeFavorite(student.email, eventId)
+        : await api.addFavorite(student.email, eventId, student.name)
+      setFavorites(result.favorites)
+      setApiError('')
+    } catch (error) {
+      setApiError(`No se pudo actualizar el favorito: ${error.message}`)
+    }
+  }
+
+  const isFavorite = (eventId) => favorites.includes(eventId)
+
   return (
     <AppContext.Provider value={{
       student, saveStudent, clearStudent,
       inscriptions, inscribe, cancelInscription, isInscribed,
+      favorites, toggleFavorite, isFavorite,
       events, eventsLoading, apiError,
       modalOpen, openModal, closeModal, confirmRegistration, pendingEventId,
     }}>

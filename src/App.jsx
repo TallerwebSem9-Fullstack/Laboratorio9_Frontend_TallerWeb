@@ -5,6 +5,7 @@ import StudentModal from './components/StudentModal'
 import EventList from './pages/EventList'
 import EventDetail from './pages/EventDetail'
 import MyEvents from './pages/MyEvents'
+import FavoriteEvents from './pages/FavoriteEvents'
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
             <Route path="/"             element={<EventList />} />
             <Route path="/eventos/:id" element={<EventDetail />} />
             <Route path="/mis-eventos" element={<MyEvents />} />
+            <Route path="/favoritos" element={<FavoriteEvents />} />
           </Route>
 
           {/* Cualquier ruta desconocida → página principal */}
