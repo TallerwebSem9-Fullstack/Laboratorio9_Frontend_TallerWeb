@@ -34,5 +34,4 @@ steps:
     appType: 'webAppLinux'
     appName: 'frontend-taller-web'
     package: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
-    startUpCommand: 'pm2 serve /home/site/wwwroot --no-daemon --spa'
   displayName: 'Deploy to Azure App Service'
