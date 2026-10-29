@@ -31,7 +31,7 @@ steps:
 - task: AzureWebApp@1
   inputs:
     azureSubscription: 'Conexion-Frontend'
-    appType: 'webAppLinux'
+    appType: 'webApp'
     appName: 'frontend-taller-web'
     package: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
   displayName: 'Deploy to Azure App Service'
